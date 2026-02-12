@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>প্রিমিয়াম খরচ ট্র্যাকার</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* Dark Theme (Default) */
+        body {
+            --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #1a1a2e 75%, #16213e 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-dark-bg: rgba(255, 255, 255, 0.03);
+            --glass-dark-border: rgba(255, 255, 255, 0.05);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --input-bg: rgba(255, 255, 255, 0.1);
+            --input-border: rgba(255, 255, 255, 0.2);
+            --input-placeholder: rgba(255, 255, 255, 0.4);
+        }
+        
+        /* White Theme */
+        body.white-theme {
+            --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 25%, #bcccdc 50%, #9fb3c8 75%, #829ab1 100%);
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --glass-dark-bg: rgba(255, 255, 255, 0.6);
+            --glass-dark-border: rgba(0, 0, 0, 0.08);
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --text-muted: #6b7280;
+            --input-bg: rgba(255, 255, 255, 0.9);
+            --input-border: rgba(0, 0, 0, 0.15);
+            --input-placeholder: #9ca3af;
+        }
+        
+        /* Custom Glassmorphism Styles */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-dark {
+            background: var(--glass-dark-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-dark-border);
+            transition: all 0.3s ease;
+        }
+        
+        /* Gradient Background */
+        body {
+            background: var(--bg-gradient);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            transition: background 0.5s ease;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Text color transitions */
+        .text-theme {
+            color: var(--text-primary) !important;
+            transition: color 0.3s ease;
+        }
+        
+        .text-theme-secondary {
+            color: var(--text-secondary) !important;
+            transition: color 0.3s ease;
+        }
+        
+        .text-theme-muted {
+            color: var(--text-muted) !important;
+            transition: color 0.3s ease;
+        }
+        
+        /* Theme toggle button */
+        .theme-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        body.white-theme .theme-toggle {
+            background: rgba(0, 0, 0, 0.1);
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+        
+        body.white-theme .theme-toggle::before {
+            transform: translateX(30px);
+            background: #1f2937;
+        }
+        
+        /* Input styles */
+        input,
+        select {
+            color: var(--text-primary) !important;
+            background: var(--input-bg) !important;
+            border: 1px solid var(--input-border) !important;
+            transition: all 0.3s ease;
+        }
+        
+        input::placeholder {
+            color: var(--input-placeholder) !important;
+        }
+        
+        .custom-input:focus {
+            transform: scale(1.02);
+            transition: transform 0.2s ease;
+        }
+        
+        /* Option colors for select */
+        option {
+            background: #1f2937;
+            color: white;
+        }
+        
+        body.white-theme option {
+            background: white;
+            color: #1f2937;
+        }
+        
+        /* Smooth transitions */
+        .transaction-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .transaction-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Fade in animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Button hover effects */
+        .btn-primary {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Input focus effects */
+        .custom-input:focus {
+            transform: scale(1.02);
+            transition: transform 0.2s ease;
+        }
+        
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- Header Section with User Name -->
+        <header class="glass rounded-3xl p-6 mb-8 fade-in shadow-xl">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="wallet" class="text-theme w-10 h-10"></i>
+                    <div>
+                        <h1 class="text-3xl md:text-4xl font-bold text-theme">খরচ ট্র্যাকার</h1>
+                        <p class="text-theme-secondary text-sm">স্মার্টভাবে আপনার অর্থ পরিচালনা করুন</p>
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+                    <!-- Currency Selector -->
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="dollar-sign" class="text-theme w-5 h-5"></i>
+                        <select 
+                            id="currencySelect"
+                            onchange="changeCurrency(this.value)"
+                            class="px-3 py-2 rounded-xl text-theme custom-input focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            <option value="USD">USD ($)</option>
+                            <option value="BDT">BDT (৳)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="INR">INR (₹)</option>
+                        </select>
+                    </div>
+                    <!-- Theme Toggle -->
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="sun" class="text-theme w-5 h-5"></i>
+                        <div class="theme-toggle" onclick="toggleTheme()"></div>
+                        <i data-lucide="moon" class="text-theme w-5 h-5"></i>
+                    </div>
+                    <!-- User Name Input -->
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="user" class="text-theme w-6 h-6"></i>
+                        <input 
+                            type="text" 
+                            id="userName" 
+                            placeholder="আপনার নাম লিখুন"
+                            class="px-4 py-2 rounded-xl text-theme custom-input w-full md:w-48 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Dashboard Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Total Income Card -->
+            <div class="glass rounded-3xl p-6 fade-in shadow-xl" style="animation-delay: 0.1s;">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-emerald-500/30 p-3 rounded-2xl">
+                        <i data-lucide="trending-up" class="text-emerald-600 w-8 h-8"></i>
+                    </div>
+                    <span class="text-emerald-600 text-sm font-medium">আয়</span>
+                </div>
+                <h3 class="text-3xl font-bold text-theme mb-1" id="totalIncome">৳০.০০</h3>
+                <p class="text-theme-muted text-sm">মোট আয়</p>
+            </div>
+            
+            <!-- Total Expense Card -->
+            <div class="glass rounded-3xl p-6 fade-in shadow-xl" style="animation-delay: 0.2s;">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-rose-500/30 p-3 rounded-2xl">
+                        <i data-lucide="trending-down" class="text-rose-600 w-8 h-8"></i>
+                    </div>
+                    <span class="text-rose-600 text-sm font-medium">ব্যয়</span>
+                </div>
+                <h3 class="text-3xl font-bold text-theme mb-1" id="totalExpense">৳০.০০</h3>
+                <p class="text-theme-muted text-sm">মোট খরচ</p>
+            </div>
+            
+            <!-- Current Balance Card -->
+            <div class="glass rounded-3xl p-6 fade-in shadow-xl" style="animation-delay: 0.3s;">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-indigo-500/30 p-3 rounded-2xl">
+                        <i data-lucide="dollar-sign" class="text-indigo-600 w-8 h-8"></i>
+                    </div>
+                    <span class="text-indigo-600 text-sm font-medium">ব্যালেন্স</span>
+                </div>
+                <h3 class="text-3xl font-bold text-theme mb-1" id="currentBalance">৳০.০০</h3>
+                <p class="text-theme-muted text-sm">বর্তমান ব্যালেন্স</p>
+            </div>
+        </div>
+        
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Transaction Form & Tips -->
+            <div class="lg:col-span-1 space-y-6">
+                
+                <!-- Add Transaction Form -->
+                <div class="glass rounded-3xl p-6 shadow-xl fade-in" style="animation-delay: 0.4s;">
+                    <h2 class="text-2xl font-bold text-theme mb-6 flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-6 h-6"></i>
+                        লেনদেন যোগ করুন
+                    </h2>
+                    
+                    <form id="transactionForm" class="space-y-4">
+                        <div>
+                            <label class="block text-theme-secondary text-sm mb-2">শিরোনাম</label>
+                            <input 
+                                type="text" 
+                                id="title" 
+                                required
+                                placeholder="যেমন: মুদি কেনাকাটা"
+                                class="w-full px-4 py-3 rounded-xl text-theme custom-input focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                        </div>
+                        
+                        <div>
+                            <label class="block text-theme-secondary text-sm mb-2">পরিমাণ (<span id="currencyLabel">৳</span>)</label>
+                            <input 
+                                type="number" 
+                                id="amount" 
+                                required
+                                step="0.01"
+                                placeholder="০.০০"
+                                class="w-full px-4 py-3 rounded-xl text-theme custom-input focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                        </div>
+                        
+                        <div>
+                            <label class="block text-theme-secondary text-sm mb-2">ক্যাটাগরি</label>
+                            <select 
+                                id="category" 
+                                required
+                                class="w-full px-4 py-3 rounded-xl text-theme custom-input focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                                <option value="" class="text-gray-800">ক্যাটাগরি নির্বাচন করুন</option>
+                                <option value="খাবার" class="text-gray-800">🍔 খাবার</option>
+                                <option value="ভাড়া" class="text-gray-800">🏠 ভাড়া</option>
+                                <option value="বেতন" class="text-gray-800">💰 বেতন</option>
+                                <option value="যাতায়াত" class="text-gray-800">🚗 যাতায়াত</option>
+                                <option value="বিনোদন" class="text-gray-800">🎬 বিনোদন</option>
+                                <option value="স্বাস্থ্য" class="text-gray-800">⚕️ স্বাস্থ্য</option>
+                                <option value="কেনাকাটা" class="text-gray-800">🛍️ কেনাকাটা</option>
+                                <option value="ইউটিলিটি" class="text-gray-800">💡 ইউটিলিটি</option>
+                                <option value="বিনিয়োগ" class="text-gray-800">📈 বিনিয়োগ</option>
+                                <option value="অন্যান্য" class="text-gray-800">📦 অন্যান্য</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-theme-secondary text-sm mb-2">ধরন</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="relative cursor-pointer">
+                                    <input 
+                                        type="radio" 
+                                        name="type" 
+                                        value="আয়" 
+                                        required
+                                        class="peer sr-only"
+                                    >
+                                    <div class="px-4 py-3 rounded-xl glass-dark text-theme text-center peer-checked:bg-emerald-500/40 peer-checked:ring-2 peer-checked:ring-emerald-500 transition-all">
+                                        আয়
+                                    </div>
+                                </label>
+                                <label class="relative cursor-pointer">
+                                    <input 
+                                        type="radio" 
+                                        name="type" 
+                                        value="ব্যয়" 
+                                        required
+                                        class="peer sr-only"
+                                    >
+                                    <div class="px-4 py-3 rounded-xl glass-dark text-theme text-center peer-checked:bg-rose-500/40 peer-checked:ring-2 peer-checked:ring-rose-500 transition-all">
+                                        ব্যয়
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-theme-secondary text-sm mb-2">তারিখ</label>
+                            <input 
+                                type="date" 
+                                id="date" 
+                                required
+                                class="w-full px-4 py-3 rounded-xl text-theme custom-input focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                        </div>
+                        
+                        <button 
+                            type="submit"
+                            class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold py-3 rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all btn-primary shadow-lg"
+                        >
+                            লেনদেন যোগ করুন
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Smart Budget Tips -->
+                <div class="glass rounded-3xl p-6 shadow-xl fade-in" style="animation-delay: 0.5s;">
+                    <h2 class="text-2xl font-bold text-theme mb-4 flex items-center gap-2">
+                        <i data-lucide="lightbulb" class="w-6 h-6"></i>
+                        স্মার্ট টিপস
+                    </h2>
+                    <div id="budgetTips" class="space-y-3 text-theme-secondary text-sm">
+                        <div class="glass-dark p-3 rounded-xl">
+                            💡 ব্যক্তিগত পরামর্শ পেতে আপনার খরচ ট্র্যাক করা শুরু করুন!
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- Right Column: Charts & Transactions -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Pie Chart -->
+                    <div class="glass rounded-3xl p-6 shadow-xl fade-in" style="animation-delay: 0.6s;">
+                        <h3 class="text-xl font-bold text-theme mb-4 flex items-center gap-2">
+                            <i data-lucide="pie-chart" class="w-5 h-5"></i>
+                            ক্যাটাগরি অনুযায়ী খরচ
+                        </h3>
+                        <div class="chart-container">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Line Chart -->
+                    <div class="glass rounded-3xl p-6 shadow-xl fade-in" style="animation-delay: 0.7s;">
+                        <h3 class="text-xl font-bold text-theme mb-4 flex items-center gap-2">
+                            <i data-lucide="line-chart" class="w-5 h-5"></i>
+                            খরচের ট্রেন্ড
+                        </h3>
+                        <div class="chart-container">
+                            <canvas id="lineChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Export Button -->
+                <div class="flex justify-end fade-in" style="animation-delay: 0.8s;">
+                    <button 
+                        onclick="exportToExcel()"
+                        class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold px-6 py-3 rounded-xl hover:from-emerald-600 hover:to-teal-700 transition-all btn-primary shadow-lg flex items-center gap-2"
+                    >
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                        এক্সেলে ডাউনলোড করুন
+                    </button>
+                </div>
+                
+                <!-- Transactions List -->
+                <div class="glass rounded-3xl p-6 shadow-xl fade-in" style="animation-delay: 0.9s;">
+                    <h2 class="text-2xl font-bold text-theme mb-6 flex items-center gap-2">
+                        <i data-lucide="list" class="w-6 h-6"></i>
+                        লেনদেনের ইতিহাস
+                    </h2>
+                    
+                    <div id="transactionsList" class="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                        <div class="text-center text-theme-muted py-12">
+                            <i data-lucide="inbox" class="w-16 h-16 mx-auto mb-4 opacity-50"></i>
+                            <p>এখনও কোনো লেনদেন নেই। আপনার প্রথম লেনদেন যোগ করুন!</p>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+        </div>
+        
+    </div>
+    
+    <script>
+        // ==========================================
+        // DATA MANAGEMENT & LOCAL STORAGE
+        // ==========================================
+        
+        let transactions = [];
+        let userName = '';
+        let pieChart = null;
+        let lineChart = null;
+        let currentTheme = 'dark'; // default theme
+        let currentCurrency = 'BDT'; // default currency - Bangladeshi Taka
+        
+        // Currency symbols
+        const currencySymbols = {
+            'USD': '$',
+            'BDT': '৳',
+            'EUR': '€',
+            'GBP': '£',
+            'INR': '₹'
+        };
+        
+        // Load data from LocalStorage on page load
+        function loadData() {
+            const savedTransactions = localStorage.getItem('transactions');
+            const savedUserName = localStorage.getItem('userName');
+            const savedTheme = localStorage.getItem('theme');
+            const savedCurrency = localStorage.getItem('currency');
+            
+            if (savedTransactions) {
+                transactions = JSON.parse(savedTransactions);
+            }
+            
+            if (savedUserName) {
+                userName = savedUserName;
+                document.getElementById('userName').value = userName;
+            }
+            
+            if (savedTheme) {
+                currentTheme = savedTheme;
+                if (currentTheme === 'white') {
+                    document.body.classList.add('white-theme');
+                }
+            }
+            
+            if (savedCurrency) {
+                currentCurrency = savedCurrency;
+                document.getElementById('currencySelect').value = currentCurrency;
+            }
+            
+            // Set today's date as default
+            document.getElementById('date').valueAsDate = new Date();
+        }
+        
+        // Save data to LocalStorage
+        function saveData() {
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            localStorage.setItem('userName', userName);
+            localStorage.setItem('theme', currentTheme);
+            localStorage.setItem('currency', currentCurrency);
+        }
+        
+        // ==========================================
+        // CURRENCY CHANGE
+        // ==========================================
+        
+        function changeCurrency(currency) {
+            currentCurrency = currency;
+            saveData();
+            updateUI();
+        }
+        
+        // Get currency symbol
+        function getCurrencySymbol() {
+            return currencySymbols[currentCurrency] || '$';
+        }
+        
+        // Format amount with currency
+        function formatAmount(amount) {
+            return getCurrencySymbol() + amount.toFixed(2);
+        }
+        
+        // ==========================================
+        // THEME TOGGLE
+        // ==========================================
+        
+        function toggleTheme() {
+            if (currentTheme === 'dark') {
+                currentTheme = 'white';
+                document.body.classList.add('white-theme');
+            } else {
+                currentTheme = 'dark';
+                document.body.classList.remove('white-theme');
+            }
+            saveData();
+            
+            // Update charts with new theme
+            updateUI();
+        }
+        
+        // ==========================================
+        // USER NAME HANDLING
+        // ==========================================
+        
+        document.getElementById('userName').addEventListener('input', (e) => {
+            userName = e.target.value;
+            saveData();
+        });
+        
+        // ==========================================
+        // TRANSACTION FORM HANDLING
+        // ==========================================
+        
+        document.getElementById('transactionForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('title').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const category = document.getElementById('category').value;
+            const type = document.querySelector('input[name="type"]:checked').value;
+            const date = document.getElementById('date').value;
+            
+            // Create transaction object
+            const transaction = {
+                id: Date.now(), // Unique ID based on timestamp
+                title,
+                amount,
+                category,
+                type,
+                date
+            };
+            
+            // Add to transactions array
+            transactions.push(transaction);
+            
+            // Save to LocalStorage
+            saveData();
+            
+            // Reset form
+            document.getElementById('transactionForm').reset();
+            document.getElementById('date').valueAsDate = new Date();
+            
+            // Update UI
+            updateUI();
+            
+            // Show success animation
+            showNotification('লেনদেন সফলভাবে যোগ হয়েছে!', 'success');
+        });
+        
+        // ==========================================
+        // DELETE TRANSACTION
+        // ==========================================
+        
+        function deleteTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            saveData();
+            updateUI();
+            showNotification('লেনদেন মুছে ফেলা হয়েছে', 'info');
+        }
+        
+        // ==========================================
+        // CALCULATE SUMMARY
+        // ==========================================
+        
+        function calculateSummary() {
+            let totalIncome = 0;
+            let totalExpense = 0;
+            
+            transactions.forEach(t => {
+                if (t.type === 'Income') {
+                    totalIncome += t.amount;
+                } else {
+                    totalExpense += t.amount;
+                }
+            });
+            
+            const currentBalance = totalIncome - totalExpense;
+            
+            return { totalIncome, totalExpense, currentBalance };
+        }
+        
+        // ==========================================
+        // UPDATE DASHBOARD SUMMARY
+        // ==========================================
+        
+        function updateSummary() {
+            const { totalIncome, totalExpense, currentBalance } = calculateSummary();
+            
+            document.getElementById('totalIncome').textContent = formatAmount(totalIncome);
+            document.getElementById('totalExpense').textContent = formatAmount(totalExpense);
+            document.getElementById('currentBalance').textContent = formatAmount(currentBalance);
+            
+            // Update currency label in form
+            document.getElementById('currencyLabel').textContent = getCurrencySymbol();
+        }
+        
+        // ==========================================
+        // DISPLAY TRANSACTIONS (GROUPED BY DATE)
+        // ==========================================
+        
+        function displayTransactions() {
+            const container = document.getElementById('transactionsList');
+            
+            if (transactions.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-theme-muted py-12">
+                        <i data-lucide="inbox" class="w-16 h-16 mx-auto mb-4 opacity-50"></i>
+                        <p>এখনও কোনো লেনদেন নেই। আপনার প্রথম লেনদেন যোগ করুন!</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+            
+            // Sort transactions by date (newest first)
+            const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Group by date
+            const groupedByDate = {};
+            sortedTransactions.forEach(t => {
+                if (!groupedByDate[t.date]) {
+                    groupedByDate[t.date] = [];
+                }
+                groupedByDate[t.date].push(t);
+            });
+            
+            // Bengali month names
+            const banglaMonths = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+            const banglaDays = ['রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার', 'শনিবার'];
+            
+            // Build HTML
+            let html = '';
+            
+            Object.keys(groupedByDate).forEach(date => {
+                const dateTransactions = groupedByDate[date];
+                const dateTotal = dateTransactions.reduce((sum, t) => {
+                    return t.type === 'ব্যয়' ? sum + t.amount : sum;
+                }, 0);
+                
+                const dateObj = new Date(date);
+                const dayName = banglaDays[dateObj.getDay()];
+                const monthName = banglaMonths[dateObj.getMonth()];
+                const day = dateObj.getDate();
+                const year = dateObj.getFullYear();
+                const formattedDate = `${dayName}, ${day} ${monthName} ${year}`;
+                
+                html += `
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-3 pb-2 border-b border-current opacity-20">
+                            <h3 class="text-theme font-semibold flex items-center gap-2">
+                                <i data-lucide="calendar" class="w-4 h-4"></i>
+                                ${formattedDate}
+                            </h3>
+                            <span class="text-rose-500 text-sm font-medium">
+                                খরচ: ${formatAmount(dateTotal)}
+                            </span>
+                        </div>
+                        <div class="space-y-2">
+                `;
+                
+                dateTransactions.forEach(t => {
+                    const isIncome = t.type === 'আয়';
+                    const colorClass = isIncome ? 'bg-emerald-500/20 border-emerald-400/50' : 'bg-rose-500/20 border-rose-400/50';
+                    const iconColor = isIncome ? 'text-emerald-500' : 'text-rose-500';
+                    const amountColor = isIncome ? 'text-emerald-600' : 'text-rose-600';
+                    const icon = isIncome ? 'arrow-down-left' : 'arrow-up-right';
+                    
+                    html += `
+                        <div class="transaction-item glass-dark rounded-xl p-4 border ${colorClass}">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="glass-dark p-2 rounded-lg">
+                                        <i data-lucide="${icon}" class="${iconColor} w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-theme font-medium">${t.title}</h4>
+                                        <p class="text-theme-muted text-sm">${t.category}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="${amountColor} font-bold text-lg">
+                                        ${isIncome ? '+' : '-'}${formatAmount(t.amount)}
+                                    </span>
+                                    <button 
+                                        onclick="deleteTransaction(${t.id})"
+                                        class="bg-red-500/20 hover:bg-red-500/40 text-red-500 p-2 rounded-lg transition-all"
+                                    >
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+        
+        // ==========================================
+        // CHARTS - PIE CHART (CATEGORY-WISE)
+        // ==========================================
+        
+        function updatePieChart() {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            
+            // Calculate category totals (expenses only)
+            const categoryData = {};
+            transactions.forEach(t => {
+                if (t.type === 'Expense') {
+                    if (!categoryData[t.category]) {
+                        categoryData[t.category] = 0;
+                    }
+                    categoryData[t.category] += t.amount;
+                }
+            });
+            
+            const labels = Object.keys(categoryData);
+            const data = Object.values(categoryData);
+            
+            // Get theme-based text color
+            const textColor = currentTheme === 'white' ? '#1f2937' : 'rgba(255, 255, 255, 0.9)';
+            
+            // Destroy existing chart if exists
+            if (pieChart) {
+                pieChart.destroy();
+            }
+            
+            // Create new chart
+            pieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(168, 85, 247, 0.8)',
+                            'rgba(236, 72, 153, 0.8)',
+                            'rgba(14, 165, 233, 0.8)',
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(251, 146, 60, 0.8)',
+                            'rgba(139, 92, 246, 0.8)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: currentTheme === 'white' ? '#ffffff' : 'rgba(255, 255, 255, 0.5)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: textColor,
+                                padding: 10,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // ==========================================
+        // CHARTS - LINE CHART (SPENDING TREND)
+        // ==========================================
+        
+        function updateLineChart() {
+            const ctx = document.getElementById('lineChart').getContext('2d');
+            
+            // Group expenses by date
+            const dateData = {};
+            transactions.forEach(t => {
+                if (t.type === 'Expense') {
+                    if (!dateData[t.date]) {
+                        dateData[t.date] = 0;
+                    }
+                    dateData[t.date] += t.amount;
+                }
+            });
+            
+            // Sort dates
+            const sortedDates = Object.keys(dateData).sort();
+            const labels = sortedDates.map(d => {
+                const date = new Date(d);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            const data = sortedDates.map(d => dateData[d]);
+            
+            // Get theme-based colors
+            const textColor = currentTheme === 'white' ? '#1f2937' : 'rgba(255, 255, 255, 0.9)';
+            const gridColor = currentTheme === 'white' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+            
+            // Destroy existing chart if exists
+            if (lineChart) {
+                lineChart.destroy();
+            }
+            
+            // Create new chart
+            lineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'দৈনিক খরচ',
+                        data: data,
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: 'rgba(239, 68, 68, 1)',
+                        pointBorderColor: currentTheme === 'white' ? '#ffffff' : '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: textColor,
+                                callback: function(value) {
+                                    return getCurrencySymbol() + value;
+                                }
+                            },
+                            grid: {
+                                color: gridColor
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: textColor
+                            },
+                            grid: {
+                                color: gridColor
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // ==========================================
+        // SMART BUDGET TIPS
+        // ==========================================
+        
+        function generateBudgetTips() {
+            const container = document.getElementById('budgetTips');
+            const { totalIncome, totalExpense, currentBalance } = calculateSummary();
+            
+            let tips = [];
+            
+            // Calculate category percentages
+            const categoryTotals = {};
+            transactions.forEach(t => {
+                if (t.type === 'ব্যয়') {
+                    if (!categoryTotals[t.category]) {
+                        categoryTotals[t.category] = 0;
+                    }
+                    categoryTotals[t.category] += t.amount;
+                }
+            });
+            
+            // Tip 1: Balance-based tip
+            if (currentBalance < 0) {
+                tips.push('⚠️ আপনার খরচ আয়ের চেয়ে বেশি। অপ্রয়োজনীয় খরচ কমানোর চেষ্টা করুন।');
+            } else if (currentBalance > 0 && totalIncome > 0) {
+                const savingsRate = (currentBalance / totalIncome * 100).toFixed(1);
+                tips.push(`💰 দারুণ! আপনি আপনার আয়ের ${savingsRate}% সঞ্চয় করছেন।`);
+            }
+            
+            // Tip 2: High category spending
+            const highestCategory = Object.keys(categoryTotals).reduce((a, b) => 
+                categoryTotals[a] > categoryTotals[b] ? a : b, '');
+            if (highestCategory && totalExpense > 0) {
+                const percentage = (categoryTotals[highestCategory] / totalExpense * 100).toFixed(1);
+                tips.push(`📊 আপনার খরচের ${percentage}% ${highestCategory} এ। সাশ্রয়ের সুযোগ খুঁজুন।`);
+            }
+            
+            // Tip 3: Transaction count
+            if (transactions.length > 20) {
+                tips.push('📱 আপনার অনেক লেনদেন আছে। আপনার খরচের ধরন ভালোভাবে ট্র্যাক করতে ক্যাটাগরি ব্যবহার করুন।');
+            }
+            
+            // Tip 4: General financial advice
+            if (totalExpense > 0 && currentBalance >= 0) {
+                tips.push('🎯 ৫০/৩০/২০ নিয়ম চেষ্টা করুন: ৫০% প্রয়োজন, ৩০% চাহিদা, ২০% সঞ্চয়।');
+            }
+            
+            // Tip 5: Emergency fund
+            if (totalIncome > 0 && currentBalance > totalExpense) {
+                tips.push('🛡️ ৩-৬ মাসের খরচের সমান একটি জরুরি তহবিল তৈরি করার কথা ভাবুন।');
+            }
+            
+            // Default tip if no data
+            if (tips.length === 0) {
+                tips.push('💡 ব্যক্তিগত পরামর্শ পেতে আপনার খরচ ট্র্যাক করা শুরু করুন!');
+                tips.push('📈 মাসিক বাজেট তৈরি করুন এবং তা মেনে চলুন।');
+                tips.push('🎯 ট্র্যাকে থাকতে সাপ্তাহিক আপনার খরচ পর্যালোচনা করুন।');
+            }
+            
+            // Display tips
+            let html = '';
+            tips.slice(0, 4).forEach(tip => {
+                html += `<div class="glass-dark p-3 rounded-xl text-theme-secondary">${tip}</div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // ==========================================
+        // EXPORT TO EXCEL (CSV FORMAT)
+        // ==========================================
+        
+        function exportToExcel() {
+            if (transactions.length === 0) {
+                showNotification('রপ্তানি করার জন্য কোনো লেনদেন নেই', 'info');
+                return;
+            }
+            
+            // Create CSV content
+            let csv = `তারিখ,শিরোনাম,ক্যাটাগরি,ধরন,পরিমাণ (${currentCurrency})\n`;
+            
+            // Sort by date
+            const sortedTransactions = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            sortedTransactions.forEach(t => {
+                csv += `${t.date},"${t.title}",${t.category},${t.type},${t.amount.toFixed(2)}\n`;
+            });
+            
+            // Add summary
+            const { totalIncome, totalExpense, currentBalance } = calculateSummary();
+            csv += '\n';
+            csv += `মোট আয় (${currentCurrency}),,,,${totalIncome.toFixed(2)}\n`;
+            csv += `মোট খরচ (${currentCurrency}),,,,${totalExpense.toFixed(2)}\n`;
+            csv += `বর্তমান ব্যালেন্স (${currentCurrency}),,,,${currentBalance.toFixed(2)}\n`;
+            
+            // Create download link
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `খরচ-ট্র্যাকার-${currentCurrency}-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showNotification('সফলভাবে রপ্তানি হয়েছে!', 'success');
+        }
+        
+        // ==========================================
+        // NOTIFICATION SYSTEM
+        // ==========================================
+        
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 glass rounded-xl p-4 shadow-2xl fade-in z-50 max-w-sm`;
+            
+            const bgColor = type === 'success' ? 'bg-emerald-500/30' : 
+                           type === 'info' ? 'bg-indigo-500/30' : 'bg-rose-500/30';
+            
+            notification.classList.add(bgColor);
+            
+            notification.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i data-lucide="${type === 'success' ? 'check-circle' : 'info'}" class="text-white w-5 h-5"></i>
+                    <p class="text-white font-medium">${message}</p>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            lucide.createIcons();
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // ==========================================
+        // UPDATE ALL UI COMPONENTS
+        // ==========================================
+        
+        function updateUI() {
+            updateSummary();
+            displayTransactions();
+            updatePieChart();
+            updateLineChart();
+            generateBudgetTips();
+        }
+        
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            updateUI();
+            lucide.createIcons();
+        });
+        
+    </script>
+    
+</body>
+</html>
